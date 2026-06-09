@@ -44,7 +44,7 @@ async function getStitchedSchema() {
     }
 
     const localSubschema = { schema: localSchema };
-    const ms3Subschema = { schema: ms3Schema, executor: ms3Executor };
+    const ms3Subschema = { schema: ms3Schema as GraphQLSchema, executor: ms3Executor };
 
     const resolvePacienteDesdeMs1 = (parent: any, _args: any, context: any, info: any) => {
       if (!parent || !parent.pacienteId) return null;
