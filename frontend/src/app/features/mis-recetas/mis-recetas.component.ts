@@ -5,13 +5,17 @@ import { Apollo } from 'apollo-angular';
 import { take } from 'rxjs';
 import { MIS_RECETAS, MIS_RECETAS_PACIENTE, LIST_PACIENTES, LIST_MEDICAMENTOS, EMITIR_RECETA, VERIFICAR_RECETA } from '../../core/graphql/queries';
 import { SupabaseService } from '../../core/auth/supabase.service';
+import { SaldoBlockchainComponent } from '../saldo-blockchain/saldo-blockchain.component';
 
 @Component({
   selector: 'app-mis-recetas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SaldoBlockchainComponent],
   template: `
     <h1 class="page-title">{{ esMedico ? 'Mis recetas (Médico)' : 'Mis recetas' }}</h1>
+
+    <!-- Saldo de POL en Polygon Amoy (solo MEDICO: es quien registra y gasta gas) -->
+    <app-saldo-blockchain *ngIf="esMedico"></app-saldo-blockchain>
 
     <!-- Formulario emitir - solo MEDICO -->
     <div class="card" *ngIf="esMedico">
