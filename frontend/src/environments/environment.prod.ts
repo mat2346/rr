@@ -7,11 +7,11 @@
  */
 export const environment = {
   production: true,
-  graphqlUrl: '<YOUR_GATEWAY_GRAPHQL_URL>',           // ej: https://gateway.<tudominio>.com/graphql
-  ms2Url: '<YOUR_MS2_URL>',                           // ej: https://ms-diagnosticos.<tudominio>.com
-  blockchainUrl: '<YOUR_BLOCKCHAIN_URL>',             // ej: https://ms-blockchain.<tudominio>.com
+  graphqlUrl: 'https://rr-rho-jade.vercel.app/api/graphql',
+  ms2Url: 'http://localhost:8000',
+  blockchainUrl: 'https://rr-ch3a.onrender.com',
   supabase: {
-    url: '<YOUR_SUPABASE_URL>',
-    anonKey: '<YOUR_SUPABASE_PUBLISHABLE_KEY>'
+    url: 'https://yiyfwfvxdseamnelgetf.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeWZ3ZnZ4ZHNlYW1uZWxnZXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NTU4MzAsImV4cCI6MjA5NTUzMTgzMH0.oD57Pm5qYafxeB5a9u_z6IW7V7fVypD5gmkUfsmikLg'
   }
 };
