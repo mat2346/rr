@@ -6,8 +6,7 @@ WORKDIR /workspace
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copiar migraciones desde el contexto padre (build context = monorepo root)
-COPY ../../infra ./infra
+# Copiar codigo fuente
 COPY src ./src
 
 RUN mvn clean package -DskipTests -B
