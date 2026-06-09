@@ -1,0 +1,73 @@
+# ============================================================
+# .gitignore GLOBAL — Monorepo Clinica
+# Cubre: Next.js (backend/), Spring Boot (springboot/), Angular (frontend/)
+# ============================================================
+
+# -------------------------------------------------------
+# 🔒 SECRETOS — NUNCA SUBIR
+# -------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.jks
+
+# -------------------------------------------------------
+# 📦 Node / Next.js / Angular — node_modules y builds
+# -------------------------------------------------------
+node_modules/
+**/node_modules/
+
+# Next.js
+**/.next/
+**/out/
+next-env.d.ts
+**/*.tsbuildinfo
+
+# Angular
+**/dist/
+**/.angular/
+**/dist-server/
+
+# -------------------------------------------------------
+# ☕ Java / Maven / Spring Boot
+# -------------------------------------------------------
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+!**/mvnw
+!**/mvnw.cmd
+*.class
+*.jar
+!**/dependency-reduced-pom.xml
+
+# -------------------------------------------------------
+# 🐳 Docker — cachés locales
+# -------------------------------------------------------
+.docker/
+
+# -------------------------------------------------------
+# 🛠️ IDEs y editores
+# -------------------------------------------------------
+.idea/
+*.iml
+*.iws
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -------------------------------------------------------
+# 📋 Logs y temporales
+# -------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+*.temp
