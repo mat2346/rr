@@ -98,6 +98,10 @@ services:
       - PORT=3001
       # Acepta peticiones del Angular (host) y de los otros servicios Docker
       - CORS_ORIGINS=http://localhost:4200,http://localhost:8080,http://springboot:8080,http://backend:3000
+      # Llamada servidor-a-servidor desde Spring Boot (sin token de usuario):
+      # vaciamos JWKS para que el middleware corra en modo DEV (sin auth).
+      # Seguro: ms-blockchain solo es accesible dentro de la red Docker.
+      - SUPABASE_JWKS_URI=
 
 volumes:
   frontend_node_modules:
