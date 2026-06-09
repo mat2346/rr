@@ -39,9 +39,13 @@ services:
       - NODE_ENV=development
       # Redireccion de red interna de Docker: Next.js busca a Java por el nombre del contenedor
       - MS3_URL=http://springboot:8080/graphql
+      # ms-blockchain por nombre de servicio dentro de la red Docker
+      - BLOCKCHAIN_URL=http://ms-blockchain:3001
     depends_on:
       springboot:
         condition: service_healthy
+      ms-blockchain:
+        condition: service_started
 
   # ----------------------------------------------------
   # Spring Boot: Java / Gestion (Puerto 8080)
@@ -61,6 +65,8 @@ services:
     environment:
       - SERVER_PORT=8080
       - PORT=8080
+      # ms-gestion llama a ms-blockchain para registrar recetas controladas
+      - BLOCKCHAIN_URL=http://ms-blockchain:3001
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /actuator/health HTTP/1.0\r\n\r\n' >&3 && cat <&3 | grep -q 'UP'"]
       interval: 10s
@@ -68,8 +74,34 @@ services:
       retries: 30
       start_period: 60s
 
+  # ----------------------------------------------------
+  # ms-blockchain: Node/Express -> Polygon Amoy (Puerto 3001)
+  # Registra y verifica recetas en la testnet publica de Polygon Amoy.
+  # El ABI y la address del contrato ya estan commiteados (deployments/amoy.json),
+  # por eso NO necesita compilar ni desplegar nada al arrancar.
+  # ----------------------------------------------------
+  ms-blockchain:
+    image: node:20-alpine
+    container_name: clinica-blockchain
+    working_dir: /app
+    volumes:
+      - ./block_movil/ms-blockchain:/app
+      - blockchain_node_modules:/app/node_modules
+    ports:
+      - "3001:3001"
+    command: >
+      sh -c "npm install && npm start"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      # Acepta peticiones del Angular (host) y de los otros servicios Docker
+      - CORS_ORIGINS=http://localhost:4200,http://localhost:8080,http://springboot:8080,http://backend:3000
+
 volumes:
   frontend_node_modules:
   backend_node_modules:
   backend_next_cache:
+  blockchain_node_modules:
   maven_cache:
