@@ -9,7 +9,10 @@ export const environment = {
   production: true,
   graphqlUrl: 'https://rr-rho-jade.vercel.app/api/graphql',
   ms2Url: 'https://ms-diagnostico-ia.onrender.com',
-  blockchainUrl: 'https://rr-ch3a.onrender.com',
+  // OJO: rr-ch3a.onrender.com es el Spring Boot (ms-gestion), NO el ms-blockchain.
+  // Dejar vacio hasta desplegar ms-blockchain; la UI muestra "no disponible".
+  // En Vercel esto se sobreescribe con la env var BLOCKCHAIN_URL (ver set-env.js).
+  blockchainUrl: '',
   supabase: {
     url: 'https://yiyfwfvxdseamnelgetf.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpeWZ3ZnZ4ZHNlYW1uZWxnZXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NTU4MzAsImV4cCI6MjA5NTUzMTgzMH0.oD57Pm5qYafxeB5a9u_z6IW7V7fVypD5gmkUfsmikLg'

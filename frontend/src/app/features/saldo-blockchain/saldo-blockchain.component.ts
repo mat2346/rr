@@ -25,6 +25,12 @@ import { SaldoBlockchainService, EstadoSaldoBlockchain } from '../../core/blockc
       <!-- Cargando -->
       <p *ngIf="cargando && !estado" class="saldo-muted">Consultando Polygon Amoy…</p>
 
+      <!-- Servicio no desplegado en este entorno: aviso neutro, no es un error del usuario -->
+      <div *ngIf="noDisponible" class="saldo-aviso">
+        <i class="pi pi-info-circle"></i>
+        El servicio blockchain no está disponible en este entorno. El saldo y el registro on-chain se activarán cuando se despliegue.
+      </div>
+
       <!-- Error -->
       <div *ngIf="error" class="saldo-error">
         <i class="pi pi-exclamation-triangle"></i>
@@ -115,6 +121,8 @@ export class SaldoBlockchainComponent implements OnInit {
   estado: EstadoSaldoBlockchain | null = null;
   cargando = false;
   error: string | null = null;
+  /** true cuando ms-blockchain no esta desplegado/alcanzable en este entorno. */
+  noDisponible = false;
 
   ngOnInit(): void {
     this.cargar();
@@ -123,10 +131,15 @@ export class SaldoBlockchainComponent implements OnInit {
   async cargar(): Promise<void> {
     this.cargando = true;
     this.error = null;
+    this.noDisponible = false;
     try {
       this.estado = await this.saldoService.obtenerEstado();
     } catch (e: any) {
-      this.error = e?.message || 'No se pudo consultar el saldo en Polygon Amoy.';
+      if (e?.name === 'BlockchainNoDisponible') {
+        this.noDisponible = true;
+      } else {
+        this.error = e?.message || 'No se pudo consultar el saldo en Polygon Amoy.';
+      }
     } finally {
       this.cargando = false;
     }

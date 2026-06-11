@@ -112,3 +112,32 @@ ms-gestion llama a `POST /recetas` cada vez que un médico emite una receta con 
 ## Variables de entorno
 
 Ver `.env.example`.
+
+## Despliegue en Render (pendiente)
+
+> **OJO**: en `environment.prod.ts` del frontend, `blockchainUrl` apuntaba a
+> `https://rr-ch3a.onrender.com`, que es el **Spring Boot (ms-gestion)**, no este
+> servicio. Este microservicio AÚN NO está desplegado; por eso la tarjeta de
+> saldo en `/mis-recetas` (rol MEDICO) muestra "no disponible" en la nube.
+
+Pasos para desplegarlo:
+
+1. En Render: **New → Web Service**, repo `mat2346/rr`, Root Directory
+   `block_movil/ms-blockchain`, Build Command `npm install`, Start Command
+   `npm start` (instancia Free sirve).
+2. Variables de entorno del servicio:
+
+   ```ini
+   AMOY_RPC_URL=https://rpc-amoy.polygon.technology
+   PRIVATE_KEY=<la wallet del sistema, ver .env local>
+   CONTRACT_ADDRESS=0xBa43Cc53c22851505179e0163A24E77681374805
+   SUPABASE_JWKS_URI=https://yiyfwfvxdseamnelgetf.supabase.co/auth/v1/.well-known/jwks.json
+   # CORS con comodín: cubre los dominios rotativos de los deploys de Vercel
+   CORS_ORIGINS=http://localhost:4200,https://*-mat2346s-projects.vercel.app,https://frontendangular*.vercel.app
+   ```
+
+   El `SUPABASE_JWKS_URI` debe ser del MISMO proyecto Supabase que usa el
+   frontend (`yiyfwfvxdseamnelgetf`), si no, todos los tokens darán 401.
+3. En Vercel (proyecto del frontend): poner la env var `BLOCKCHAIN_URL` con la
+   URL que Render asigne (p.ej. `https://ms-blockchain-XXXX.onrender.com`) y
+   redesplegar. `set-env.js` la inyecta en `environment.prod.ts` en el build.

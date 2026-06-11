@@ -9,8 +9,25 @@ const { errorDetails } = require('./utils/errorDetails');
 
 const app = express();
 
+// CORS_ORIGINS admite comodines (*) para dominios rotativos, p.ej. los deploys
+// de Vercel: "https://*-mat2346s-projects.vercel.app". Cada * cubre un segmento
+// alfanumerico (letras, numeros y guiones), nunca puntos.
+const allowList = (process.env.CORS_ORIGINS || 'http://localhost:4200,http://localhost:8080')
+  .split(',').map(o => o.trim()).filter(Boolean);
+
+function originPermitido(origin) {
+  return allowList.some(entry => {
+    if (!entry.includes('*')) return entry === origin;
+    const regex = new RegExp(
+      '^' + entry.split('*').map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[A-Za-z0-9-]+') + '$',
+      'i'
+    );
+    return regex.test(origin);
+  });
+}
+
 app.use(cors({
-  origin: (process.env.CORS_ORIGINS || 'http://localhost:4200,http://localhost:8080').split(','),
+  origin: (origin, cb) => cb(null, !origin || originPermitido(origin)),
   credentials: true,
   allowedHeaders: ['Authorization', 'Content-Type']
 }));

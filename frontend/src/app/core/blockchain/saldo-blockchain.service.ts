@@ -36,14 +36,27 @@ export class SaldoBlockchainService {
   async obtenerEstado(): Promise<EstadoSaldoBlockchain> {
     const token = await this.supabase.getAccessToken();
 
-    const res = await fetch(`${this.baseUrl}/recetas/gas`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // El endpoint exige JWT (auth()); reutilizamos el de Supabase.
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      }
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}/recetas/gas`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // El endpoint exige JWT (auth()); reutilizamos el de Supabase.
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+    } catch {
+      // fetch lanza TypeError sin detalle cuando la red falla o CORS bloquea:
+      // tipico de un entorno donde ms-blockchain no esta desplegado.
+      throw this.errorNoDisponible();
+    }
+
+    if (res.status === 404) {
+      // Hay un servidor en blockchainUrl pero no expone /recetas/gas:
+      // la URL apunta a otro servicio (no al ms-blockchain).
+      throw this.errorNoDisponible();
+    }
 
     if (!res.ok) {
       const detalle = await res.text().catch(() => '');
@@ -51,5 +64,11 @@ export class SaldoBlockchainService {
     }
 
     return res.json();
+  }
+
+  private errorNoDisponible(): Error {
+    const e = new Error('El servicio blockchain no está disponible en este entorno.');
+    e.name = 'BlockchainNoDisponible';
+    return e;
   }
 }
