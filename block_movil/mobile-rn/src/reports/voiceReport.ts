@@ -15,6 +15,7 @@
 // por reglas y la pantalla sigue funcionando.
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
+import { File } from 'expo-file-system';
 import {
   useAudioRecorder,
   RecordingPresets,
@@ -114,7 +115,9 @@ export function useReporteVozIA(rol: string, token: string | undefined) {
     setEstado('procesando');
     try {
       const fd = new FormData();
-      fd.append('audio', { uri, name: 'consulta.m4a', type: 'audio/m4a' } as any);
+      // SDK 54+: el objeto legacy {uri,name,type} lanza "Unsupported
+      // FormDataPart implementation"; File (expo-file-system) implementa Blob.
+      fd.append('audio', new File(uri) as any);
       fd.append('rol', rol);
       fd.append('catalogo', JSON.stringify(catalogo));
       return await postReporte(fd, token);

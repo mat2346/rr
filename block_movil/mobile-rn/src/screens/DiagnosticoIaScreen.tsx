@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { File } from 'expo-file-system';
 import { useAuth } from '../auth/AuthContext';
 import { env } from '../config/env';
 import {
@@ -119,8 +120,10 @@ export function DiagnosticoIaScreen() {
     setAnalizando(true);
     try {
       const form = new FormData();
-      // FormData de React Native: el "file" es un objeto { uri, name, type }.
-      form.append('file', { uri: fotoUri, name: 'estudio.jpg', type: 'image/jpeg' } as any);
+      // SDK 54+: el fetch global (WinterCG) ya no acepta el objeto legacy
+      // {uri, name, type} — lanza "Unsupported FormDataPart implementation".
+      // La clase File de expo-file-system implementa Blob y sí es soportada.
+      form.append('file', new File(fotoUri) as any);
       if (paciente) form.append('paciente_id', paciente.id);
       if (descripcion.trim()) form.append('descripcion', descripcion.trim());
 
