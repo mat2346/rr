@@ -1,7 +1,15 @@
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+
+// Expo Go (SDK 53+) ya no soporta push remoto: el SOLO IMPORT de
+// expo-notifications registra un listener al cargar el modulo
+// (DevicePushTokenAutoRegistration.fx) que lanza un error fatal en Go.
+// Por eso el import es dinamico y solo fuera de Expo Go.
+const enExpoGo = Constants.appOwnership === 'expo';
+const Notifications = (enExpoGo ? null : require('expo-notifications')) as
+  | typeof import('expo-notifications')
+  | null;
 import { apolloClient } from '../config/apollo';
 import { REGISTRAR_PUSH_TOKEN } from '../graphql/queries';
 import { supabase } from '../config/supabase';
@@ -33,6 +41,12 @@ function getProjectId(): string | undefined {
  * NUNCA lanza: devuelve { ok, token?, error? }.
  */
 export async function registrarPushToken(): Promise<PushRegResult> {
+  if (!Notifications) {
+    return {
+      ok: false,
+      error: 'Las push remotas no funcionan en Expo Go (SDK 53+). Usa un development build (npx expo run:android).',
+    };
+  }
   try {
     if (!Device.isDevice) {
       return { ok: false, error: 'Las notificaciones push requieren un dispositivo físico.' };

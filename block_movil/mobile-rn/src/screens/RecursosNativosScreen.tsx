@@ -3,17 +3,27 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'rea
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as LocalAuthentication from 'expo-local-authentication';
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { registrarPushToken } from '../lib/registerPush';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// En Expo Go (SDK 53+) el SOLO IMPORT de expo-notifications lanza un error
+// fatal (registra un push listener al cargar el modulo). Import dinamico
+// y solo fuera de Expo Go; en Go la seccion de push muestra un aviso.
+const enExpoGo = Constants.appOwnership === 'expo';
+const Notifications = (enExpoGo ? null : require('expo-notifications')) as
+  | typeof import('expo-notifications')
+  | null;
+
+if (Notifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export function RecursosNativosScreen() {
   return (
@@ -169,6 +179,10 @@ function PushSection() {
   }
 
   async function enviarLocal() {
+    if (!Notifications) {
+      Alert.alert('Expo Go', 'Las notificaciones no están disponibles en Expo Go. Usa un development build (npx expo run:android).');
+      return;
+    }
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Clinica',

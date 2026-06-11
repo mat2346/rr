@@ -1,25 +1,23 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItemList,
+  DrawerItem,
+  type DrawerContentComponentProps,
+} from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MisRecetasScreen } from '../screens/MisRecetasScreen';
-import { MisFacturasScreen } from '../screens/MisFacturasScreen';
 import { VerificadorRecetaScreen } from '../screens/VerificadorRecetaScreen';
 import { RecursosNativosScreen } from '../screens/RecursosNativosScreen';
 import { ChatTriajeScreen } from '../screens/ChatTriajeScreen';
 import { CitasScreen } from '../screens/CitasScreen';
-import { HistoriaScreen } from '../screens/HistoriaScreen';
-import { DiagnosticoScreen } from '../screens/DiagnosticoScreen';
-import { RecepcionScreen } from '../screens/RecepcionScreen';
-import { CajaScreen } from '../screens/CajaScreen';
-import { FacturasScreen } from '../screens/FacturasScreen';
-import { InventarioScreen } from '../screens/InventarioScreen';
-import { AdministracionScreen } from '../screens/AdministracionScreen';
-import { DashboardBiScreen } from '../screens/DashboardBiScreen';
+import { DiagnosticoIaScreen } from '../screens/DiagnosticoIaScreen';
 import { ReportesScreen } from '../screens/ReportesScreen';
 import type { RolUsuario } from '../config/supabase';
 
@@ -33,24 +31,36 @@ interface MenuItem {
   roles: RolUsuario[];
 }
 
+// Menu MOVIL enfocado: solo lo esencial de cada rol en el telefono, mas
+// Reportes para TODOS los roles. La gestion administrativa completa
+// (inventario, caja, recepcion, facturas, administracion, BI, historia,
+// diagnostico) vive solo en la web — el movil NO es una copia.
 const MENU: MenuItem[] = [
   { name: 'Home', label: 'Inicio', component: HomeScreen, roles: ['ADMINISTRADOR', 'MEDICO', 'FARMACEUTICO', 'PACIENTE'] },
   { name: 'Citas', label: 'Citas', component: CitasScreen, roles: ['ADMINISTRADOR', 'MEDICO', 'PACIENTE'] },
   { name: 'MisRecetas', label: 'Mis recetas', component: MisRecetasScreen, roles: ['MEDICO', 'PACIENTE'] },
-  { name: 'MisFacturas', label: 'Mis facturas', component: MisFacturasScreen, roles: ['PACIENTE'] },
-  { name: 'Historia', label: 'Historia clinica', component: HistoriaScreen, roles: ['ADMINISTRADOR', 'MEDICO'] },
-  { name: 'Diagnostico', label: 'Diagnostico', component: DiagnosticoScreen, roles: ['ADMINISTRADOR', 'MEDICO'] },
-  { name: 'Recepcion', label: 'Recepcion', component: RecepcionScreen, roles: ['ADMINISTRADOR', 'FARMACEUTICO'] },
-  { name: 'Caja', label: 'Caja', component: CajaScreen, roles: ['ADMINISTRADOR', 'FARMACEUTICO'] },
-  { name: 'Facturas', label: 'Facturas', component: FacturasScreen, roles: ['ADMINISTRADOR', 'FARMACEUTICO'] },
-  { name: 'Inventario', label: 'Inventario', component: InventarioScreen, roles: ['ADMINISTRADOR', 'FARMACEUTICO'] },
-  { name: 'Administracion', label: 'Administracion', component: AdministracionScreen, roles: ['ADMINISTRADOR'] },
-  { name: 'DashboardBi', label: 'Dashboard BI', component: DashboardBiScreen, roles: ['ADMINISTRADOR'] },
+  { name: 'DiagnosticoIa', label: 'Diagnóstico IA', component: DiagnosticoIaScreen, roles: ['ADMINISTRADOR', 'MEDICO'] },
   { name: 'Reportes', label: 'Reportes', component: ReportesScreen, roles: ['ADMINISTRADOR', 'MEDICO', 'FARMACEUTICO', 'PACIENTE'] },
-  { name: 'ChatTriaje', label: 'Asistente IA', component: ChatTriajeScreen, roles: ['PACIENTE', 'ADMINISTRADOR', 'MEDICO'] },
   { name: 'Verificador', label: 'Verificar receta', component: VerificadorRecetaScreen, roles: ['ADMINISTRADOR', 'MEDICO', 'FARMACEUTICO'] },
+  { name: 'ChatTriaje', label: 'Asistente IA', component: ChatTriajeScreen, roles: ['PACIENTE'] },
   { name: 'RecursosNativos', label: 'Recursos del telefono', component: RecursosNativosScreen, roles: ['ADMINISTRADOR', 'MEDICO', 'FARMACEUTICO', 'PACIENTE'] },
 ];
+
+// Contenido del drawer: las opciones del rol + "Cerrar sesion" siempre
+// visible al final, desde cualquier pantalla.
+function ContenidoDrawer(props: DrawerContentComponentProps) {
+  const { signOut } = useAuth();
+  return (
+    <DrawerContentScrollView {...props}>
+      <DrawerItemList {...props} />
+      <DrawerItem
+        label="Cerrar sesión"
+        labelStyle={{ color: '#a32d2d', fontWeight: '600' }}
+        onPress={signOut}
+      />
+    </DrawerContentScrollView>
+  );
+}
 
 function MainDrawer() {
   const { user } = useAuth();
@@ -60,6 +70,7 @@ function MainDrawer() {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
+      drawerContent={(props) => <ContenidoDrawer {...props} />}
       screenOptions={{
         drawerActiveTintColor: '#0f6e56',
         drawerInactiveTintColor: '#374151',

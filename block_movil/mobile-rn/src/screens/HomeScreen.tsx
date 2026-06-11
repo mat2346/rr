@@ -19,46 +19,41 @@ export function HomeScreen({ navigation }: any) {
         <>
           <Tile label="Mis citas" onPress={() => navigation.navigate('Citas')} />
           <Tile label="Mis recetas" onPress={() => navigation.navigate('MisRecetas')} />
-          <Tile label="Mis facturas" onPress={() => navigation.navigate('MisFacturas')} />
-          <Tile label="Reportes" onPress={() => navigation.navigate('Reportes')} />
           <Tile label="Asistente IA (pre-triaje)" onPress={() => navigation.navigate('ChatTriaje')} />
+          <Tile label="Reportes" onPress={() => navigation.navigate('Reportes')} />
         </>
       )}
 
       {user?.rol === 'MEDICO' && (
         <>
           <Tile label="Agenda de citas" onPress={() => navigation.navigate('Citas')} />
-          <Tile label="Diagnostico (nuevo episodio)" onPress={() => navigation.navigate('Diagnostico')} />
-          <Tile label="Historia clinica" onPress={() => navigation.navigate('Historia')} />
           <Tile label="Mis recetas emitidas" onPress={() => navigation.navigate('MisRecetas')} />
-          <Tile label="Reportes" onPress={() => navigation.navigate('Reportes')} />
+          <Tile label="Diagnóstico con IA (foto de estudio)" onPress={() => navigation.navigate('DiagnosticoIa')} />
           <Tile label="Verificar receta en blockchain" onPress={() => navigation.navigate('Verificador')} />
+          <Tile label="Reportes" onPress={() => navigation.navigate('Reportes')} />
         </>
       )}
 
       {user?.rol === 'FARMACEUTICO' && (
         <>
-          <Tile label="Caja (nueva venta)" onPress={() => navigation.navigate('Caja')} />
-          <Tile label="Recepcion de pacientes" onPress={() => navigation.navigate('Recepcion')} />
-          <Tile label="Inventario" onPress={() => navigation.navigate('Inventario')} />
-          <Tile label="Facturas" onPress={() => navigation.navigate('Facturas')} />
-          <Tile label="Reportes" onPress={() => navigation.navigate('Reportes')} />
           <Tile label="Verificar receta en blockchain" onPress={() => navigation.navigate('Verificador')} />
+          <Tile label="Reportes" onPress={() => navigation.navigate('Reportes')} />
         </>
       )}
 
       {user?.rol === 'ADMINISTRADOR' && (
         <>
           <Tile label="Citas" onPress={() => navigation.navigate('Citas')} />
-          <Tile label="Recepcion de pacientes" onPress={() => navigation.navigate('Recepcion')} />
-          <Tile label="Caja (nueva venta)" onPress={() => navigation.navigate('Caja')} />
-          <Tile label="Inventario" onPress={() => navigation.navigate('Inventario')} />
-          <Tile label="Facturas" onPress={() => navigation.navigate('Facturas')} />
-          <Tile label="Administracion de usuarios" onPress={() => navigation.navigate('Administracion')} />
-          <Tile label="Dashboard BI" onPress={() => navigation.navigate('DashboardBi')} />
+          <Tile label="Diagnóstico con IA (foto de estudio)" onPress={() => navigation.navigate('DiagnosticoIa')} />
+          <Tile label="Verificar receta en blockchain" onPress={() => navigation.navigate('Verificador')} />
           <Tile label="Reportes" onPress={() => navigation.navigate('Reportes')} />
         </>
       )}
+
+      <Text style={styles.webNote}>
+        La gestión completa (inventario, caja, recepción, facturación,
+        administración y dashboard BI) está disponible en la versión web.
+      </Text>
 
       <Tile label="Recursos del telefono (camara, GPS, biometria, push)" onPress={() => navigation.navigate('RecursosNativos')} />
 
@@ -96,4 +91,5 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#a32d2d',
   },
   logoutText: { color: '#a32d2d', fontWeight: '600' },
+  webNote: { marginTop: 14, marginHorizontal: 4, fontSize: 12, color: '#9ca3af', textAlign: 'center' },
 });
