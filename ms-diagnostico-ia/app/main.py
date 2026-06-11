@@ -1,6 +1,5 @@
 import json
 
-from datetime import datetime
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -19,7 +18,18 @@ from app.schemas import (
 )
 from app.services.gemini import gemini_image_analysis, gemini_triage
 from app.services.rules import fallback_image_analysis, rule_based_triage
-from app.services.storage import save_result, save_upload
+from app.services.storage import (
+    DocumentoRecord,
+    ResultadoRecord,
+    get_document,
+    get_result,
+    list_documents,
+    list_results,
+    list_results_by_patient,
+    save_result,
+    save_upload,
+    update_result_revision,
+)
 
 
 app = FastAPI(
@@ -43,19 +53,21 @@ def on_startup() -> None:
     init_db()
 
 
-def documento_to_response(doc: DocumentoClinico) -> DocumentoResponse:
+def documento_to_response(doc: DocumentoClinico | DocumentoRecord) -> DocumentoResponse:
     return DocumentoResponse(
         id=doc.id,
         paciente_id=doc.paciente_id,
         nombre_original=doc.nombre_original,
         content_type=doc.content_type,
+        s3_bucket=doc.s3_bucket,
+        s3_key=doc.s3_key,
         tamano_bytes=doc.tamano_bytes,
         descripcion=doc.descripcion,
         creado_en=doc.creado_en,
     )
 
 
-def resultado_to_response(row: ResultadoIa) -> ResultadoResponse:
+def resultado_to_response(row: ResultadoIa | ResultadoRecord) -> ResultadoResponse:
     return ResultadoResponse(
         id=row.id,
         paciente_id=row.paciente_id,
@@ -97,6 +109,7 @@ async def chat_triaje(
 
     save_result(
         db,
+        settings,
         tipo="chat_triaje",
         proveedor=result.proveedor,
         paciente_id=payload.paciente_id,
@@ -120,20 +133,22 @@ async def subir_documento(
 
 
 @app.get("/api/documentos", response_model=list[DocumentoResponse])
-def listar_documentos(paciente_id: str, db: Session = Depends(get_db)) -> list[DocumentoResponse]:
-    docs = (
-        db.query(DocumentoClinico)
-        .filter(DocumentoClinico.paciente_id == paciente_id)
-        .order_by(DocumentoClinico.creado_en.desc())
-        .limit(100)
-        .all()
-    )
+def listar_documentos(
+    paciente_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> list[DocumentoResponse]:
+    docs = list_documents(db, settings, paciente_id)
     return [documento_to_response(doc) for doc in docs]
 
 
 @app.get("/api/documentos/{documento_id}", response_model=DocumentoResponse)
-def obtener_documento(documento_id: int, db: Session = Depends(get_db)) -> DocumentoResponse:
-    doc = db.get(DocumentoClinico, documento_id)
+def obtener_documento(
+    documento_id: int,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> DocumentoResponse:
+    doc = get_document(db, settings, documento_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return documento_to_response(doc)
@@ -162,6 +177,7 @@ async def analizar_imagen(
 
     row = save_result(
         db,
+        settings,
         tipo="analisis_imagen",
         proveedor=analysis["proveedor"],
         paciente_id=paciente_id,
@@ -179,20 +195,22 @@ async def analizar_imagen(
 
 
 @app.get("/api/resultados/paciente/{paciente_id}", response_model=list[ResultadoResponse])
-def resultados_por_paciente(paciente_id: str, db: Session = Depends(get_db)) -> list[ResultadoResponse]:
-    rows = (
-        db.query(ResultadoIa)
-        .filter(ResultadoIa.paciente_id == paciente_id)
-        .order_by(ResultadoIa.creado_en.desc())
-        .limit(50)
-        .all()
-    )
+def resultados_por_paciente(
+    paciente_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> list[ResultadoResponse]:
+    rows = list_results_by_patient(db, settings, paciente_id)
     return [resultado_to_response(row) for row in rows]
 
 
 @app.get("/api/resultados/{resultado_id}", response_model=ResultadoResponse)
-def obtener_resultado(resultado_id: int, db: Session = Depends(get_db)) -> ResultadoResponse:
-    row = db.get(ResultadoIa, resultado_id)
+def obtener_resultado(
+    resultado_id: int,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> ResultadoResponse:
+    row = get_result(db, settings, resultado_id)
     if not row:
         raise HTTPException(status_code=404, detail="Resultado IA no encontrado")
     return resultado_to_response(row)
@@ -203,25 +221,31 @@ def revisar_resultado(
     resultado_id: int,
     payload: RevisionResultadoRequest,
     db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ) -> ResultadoResponse:
-    row = db.get(ResultadoIa, resultado_id)
+    row = get_result(db, settings, resultado_id)
     if not row:
         raise HTTPException(status_code=404, detail="Resultado IA no encontrado")
     if row.tipo != "analisis_imagen":
         raise HTTPException(status_code=400, detail="Solo los analisis de imagen requieren revision medica")
 
-    row.estado_revision = payload.estado_revision
-    row.decision_medica = payload.decision_medica
-    row.revisado_por = payload.revisado_por
-    row.revisado_en = datetime.utcnow() if payload.estado_revision != "PENDIENTE" else None
-    db.commit()
-    db.refresh(row)
+    row = update_result_revision(
+        db,
+        settings,
+        row,
+        payload.estado_revision,
+        payload.decision_medica,
+        payload.revisado_por,
+    )
     return resultado_to_response(row)
 
 
 @app.get("/api/indicadores", response_model=IndicadoresIaResponse)
-def indicadores_ia(db: Session = Depends(get_db)) -> IndicadoresIaResponse:
-    rows = db.query(ResultadoIa).all()
+def indicadores_ia(
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> IndicadoresIaResponse:
+    rows = list_results(db, settings)
     image_rows = [row for row in rows if row.tipo == "analisis_imagen"]
     triage_rows = [row for row in rows if row.tipo == "chat_triaje"]
 

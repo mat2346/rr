@@ -26,6 +26,8 @@ class DocumentoResponse(BaseModel):
     paciente_id: str | None
     nombre_original: str
     content_type: str | None
+    s3_bucket: str | None = None
+    s3_key: str | None = None
     tamano_bytes: int
     descripcion: str | None
     creado_en: datetime

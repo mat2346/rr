@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./data/ms_ia.db"
     upload_dir: str = "./data/uploads"
     max_upload_mb: int = 15
+    storage_backend: str = "sqlite"
+    aws_region: str = "sa-east-1"
+    dynamodb_table: str = "ms2_diagnostico_ia"
+    s3_bucket: str | None = None
+    s3_prefix: str = "uploads"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

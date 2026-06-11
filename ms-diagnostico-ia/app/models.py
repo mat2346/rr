@@ -13,6 +13,8 @@ class DocumentoClinico(Base):
     nombre_original = Column(String(255), nullable=False)
     content_type = Column(String(120), nullable=True)
     ruta = Column(String(500), nullable=False)
+    s3_bucket = Column(String(255), nullable=True)
+    s3_key = Column(String(500), nullable=True)
     tamano_bytes = Column(Integer, nullable=False)
     descripcion = Column(Text, nullable=True)
     creado_en = Column(DateTime, default=datetime.utcnow, nullable=False)
